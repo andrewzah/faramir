@@ -1,0 +1,35 @@
+name: Faramir
+version: "0.1"
+author: Andrew Zah <zah@andrewzah.com>
+about: Minimal time tracking cli utility
+args:
+  - config:
+      short: c
+      long: config
+      value_name: FILE
+      help: Sets a custom config file.
+      takes_value: true
+subcommands:
+  - add:
+      about: Manually adds a time duration.
+  - start:
+      about: Starts a new timer.
+      args:
+        - tags:
+            short: t
+            long: tags
+            help: Attaches tags to the timer.
+        - project:
+            long: project
+            help: Attaches a project to the timer.
+            index: 1
+            required: true
+
+  - stop:
+      about: Stops a timer or the only running timer.
+      args:
+        - id:
+            short: i
+            help: ID of the timer.
+  - status:
+      about: Gets the status.

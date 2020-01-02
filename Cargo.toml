@@ -1,0 +1,13 @@
+[package]
+name = "faramir"
+version = "0.1.0"
+authors = ["Andrew Zah <zah@andrewzah.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "2.33.0", features = ["yaml"] }
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = "1.0.44"
