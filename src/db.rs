@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 
 use crate::errors::*;
-use crate::event::*;
-use crate::timer::*;
+use crate::models::event::*;
+use crate::models::timer::*;
 
 pub fn init_db(conn: Connection) -> AppResult<usize> {
     conn.execute(
@@ -48,31 +48,31 @@ pub fn init_db(conn: Connection) -> AppResult<usize> {
 }
 
 pub fn demo_data(conn: Connection) -> AppResult<usize> {
-    timers = vec![
+    let timers = vec![
         Timer {
-            project: "project1",
+            project: "project1".into(),
             tags: None,
             start: Utc::now(),
             end: None
         },
         Timer {
-            project: "project2",
-            tags: vec!["tag1", "tag2"],
+            project: "project2".into(),
+            tags: Some(vec!["tag1".into(), "tag2".into()]),
             start: Utc::now(),
             end: None
         }
     ];
 
-    events = vec![
-        Event {
-            project: "project1",
+    let events = vec![
+        NewEvent {
+            project: "project1".into(),
             tags: None,
             start: Utc::now(),
             end: Utc::now(),
         },
-        Timer {
-            project: "project2",
-            tags: vec!["tag1", "tag2"],
+        NewEvent {
+            project: "project2".into(),
+            tags: Some(vec!["tag1".into(), "tag2".into()]),
             start: Utc::now(),
             end: Utc::now()
         }

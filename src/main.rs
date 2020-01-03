@@ -1,3 +1,7 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
 use std::io::Write;
 
@@ -8,6 +12,7 @@ use rusqlite::{params, Connection};
 mod db;
 mod errors;
 mod models;
+mod utils;
 
 use db::*;
 use models::timer::{Timers, Timer};
@@ -32,18 +37,17 @@ fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
 }
 
 fn timer_start(
-    mut timers: Timers,
+    timers: Timers,
     project: String,
     tags: Option<Vec<String>>,
     config: &Config
 ) -> AppResult<()> {
     let timer = Timer::new(project, tags);
 
-    let msg = format!("Started timer at {}", timer.start.format(&config.full_time_format));
-    timers.append_timer(timer)?;
-    timers.write_file(&config.data_dir)?;
-
-    println!("{}", msg);
+    //let msg = format!("Started timer at {}", timer.start.format(&config.full_time_format));
+    //timers.append_timer(timer)?;
+    //timers.write_file(&config.data_dir)?;
+    //println!("{}", msg);
 
     Ok(())
 }
@@ -61,12 +65,11 @@ fn timer_status(timers: Timers, config: &Config) -> AppResult<()> {
     //let mut stdout = StandardStream::stdout(ColorChoice::Always);
     //stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
 
-    let mut bufwtr = BufferWriter::stdout(ColorChoice::Always);
-    let mut buffer = bufwtr.buffer();
+    //let mut bufwtr = BufferWriter::stdout(ColorChoice::Always);
+    //let mut buffer = bufwtr.buffer();
 
-    buffer.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-    writeln!(&mut buffer, "{}", format!("{} {} found:", len, word));
-
+    //buffer.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    //writeln!(&mut buffer, "{}", format!("{} {} found:", len, word));
 
     let mut i = 1;
     for timer in timers.0 {
@@ -74,7 +77,7 @@ fn timer_status(timers: Timers, config: &Config) -> AppResult<()> {
         i += 1;
     }
 
-    bufwtr.print(&buffer)?;
+    //bufwtr.print(&buffer)?;
 
     Ok(())
 }
@@ -92,18 +95,19 @@ fn main() -> AppResult<()> {
     let conn = Connection::open(config.data_dir.join("faramir.db"))?;
     db::init_db(conn)?;
 
-    let timers = Timers::load_or_create(&config.data_dir)?;
+    //let timers = Timers::load_or_create(&config.data_dir)?;
     //let events = Events::load_or_create(&config.data_dir)?;
 
-    match matches.subcommand() {
-        ("start", Some(sub_matches)) => {
-            let project = sub_matches.value_of("project").unwrap();
-            timer_start(timers, project.into(), None, &config)
-        },
-        ("status", Some(sub_matches)) => {
-            timer_status(timers, &config)
-        },
-        ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
-        _ => Err(AppError::from_str("A subcommand must be provided."))
-    }
+    //match matches.subcommand() {
+        //("start", Some(sub_matches)) => {
+            //let project = sub_matches.value_of("project").unwrap();
+            //timer_start(timers, project.into(), None, &config)
+        //},
+        //("status", Some(sub_matches)) => {
+            //timer_status(timers, &config)
+        //},
+        //("", None) => Err(AppError::from_str("A subcommand must be provided.")),
+        //_ => Err(AppError::from_str("A subcommand must be provided."))
+    //}
+    Ok(())
 }
