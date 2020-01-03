@@ -22,16 +22,6 @@ impl Timers {
         Ok(())
     }
 
-    pub fn pretty_print(&self, config: &Config) {
-        if self.0.len() > 0 {
-            for timer in &self.0 {
-                timer.pretty_print(config);
-            }
-        } else {
-            println!("No timers are currently active.")
-        }
-    }
-
     pub fn write_file(&self, data_path: &Path) -> AppResult<()> {
         let path = data_path.join(TIMERS_FILE);
         let json = serde_json::to_string_pretty(&self.0)?;
@@ -100,10 +90,8 @@ impl Timer {
         let duration = Utc::now().signed_duration_since(self.start);
         let formatted = Timer::format_seconds(duration.num_seconds());
 
-        println!("-----------------");
-        println!("Timer for project {}", &self.project);
-        println!("Start Time: {}", &self.start.format(&config.full_time_format));
-        println!("Elapsed Time: {}", formatted);
-        println!("-----------------");
+        println!("  Timer for project {}", &self.project);
+        println!("  Elapsed Time: {}", formatted);
+        println!("  Start Time: {}", &self.start.format(&config.full_time_format));
     }
 }

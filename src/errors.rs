@@ -23,6 +23,7 @@ pub enum ErrorKind {
     Generic(String),
     IO(std::io::Error),
     SerdeJson(serde_json::error::Error),
+    Rusqlite(rusqlite::Error),
 }
 
 impl fmt::Display for AppError {
@@ -31,6 +32,7 @@ impl fmt::Display for AppError {
             ErrorKind::Generic(ref msg) => write!(f, "{}", msg),
             ErrorKind::IO(ref err) => err.fmt(f),
             ErrorKind::SerdeJson(ref err) => err.fmt(f),
+            ErrorKind::Rusqlite(ref err) => err.fmt(f),
         }
     }
 }
@@ -41,6 +43,7 @@ impl fmt::Debug for AppError {
             ErrorKind::Generic(ref msg) => write!(f, "Faramir Error: {}", msg),
             ErrorKind::IO(ref err) => err.fmt(f),
             ErrorKind::SerdeJson(ref err) => err.fmt(f),
+            ErrorKind::Rusqlite(ref err) => err.fmt(f),
         }
     }
 }
@@ -54,5 +57,12 @@ impl From<std::io::Error> for AppError {
 impl From<serde_json::error::Error> for AppError {
     fn from(err: serde_json::error::Error) -> AppError {
         AppError::new(ErrorKind::SerdeJson(err))
+    }
+}
+
+
+impl From<rusqlite::Error> for AppError {
+    fn from(err: rusqlite::Error) -> AppError {
+        AppError::new(ErrorKind::Rusqlite(err))
     }
 }

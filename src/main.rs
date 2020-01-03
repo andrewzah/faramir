@@ -1,15 +1,19 @@
 use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
+use std::io::Write;
 
 use clap::{Arg, App, load_yaml};
+use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use rusqlite::{params, Connection};
 
-mod config;
+mod db;
 mod errors;
-mod timer;
+mod models;
 
-use timer::{Timers, Timer};
-use config::Config;
+use db::*;
+use models::timer::{Timers, Timer};
+use models::event::{Events, Event};
+use models::config::Config;
 use errors::{AppResult, AppError, ErrorKind};
-
 
 fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
     match Config::from_path(&config_path) {
@@ -45,7 +49,32 @@ fn timer_start(
 }
 
 fn timer_status(timers: Timers, config: &Config) -> AppResult<()> {
-    timers.pretty_print(&config);
+    let len = timers.0.len();
+    let word = match len {
+        1 => "timer",
+        0 => {
+            println!("No timers are running.");
+            return Ok(())
+        },
+        _ => "timers"
+    };
+    //let mut stdout = StandardStream::stdout(ColorChoice::Always);
+    //stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+
+    let mut bufwtr = BufferWriter::stdout(ColorChoice::Always);
+    let mut buffer = bufwtr.buffer();
+
+    buffer.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(&mut buffer, "{}", format!("{} {} found:", len, word));
+
+
+    let mut i = 1;
+    for timer in timers.0 {
+        timer.pretty_print(&config);
+        i += 1;
+    }
+
+    bufwtr.print(&buffer)?;
 
     Ok(())
 }
@@ -60,7 +89,11 @@ fn main() -> AppResult<()> {
     };
     let config = load_or_create_config(config_path)?;
 
+    let conn = Connection::open(config.data_dir.join("faramir.db"))?;
+    db::init_db(conn)?;
+
     let timers = Timers::load_or_create(&config.data_dir)?;
+    //let events = Events::load_or_create(&config.data_dir)?;
 
     match matches.subcommand() {
         ("start", Some(sub_matches)) => {
