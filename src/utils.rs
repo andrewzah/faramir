@@ -10,3 +10,18 @@ pub fn format_seconds(secs: i64) -> String {
         weeks, days, hours, minutes, seconds
     )
 }
+
+pub fn serialize_ints(v: Option<Vec<i32>>) -> Option<String> {
+    match v {
+        Some(values) => {
+            let result = values
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            Some(result)
+        },
+        None => None
+    }
+}

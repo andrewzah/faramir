@@ -5,6 +5,7 @@
 use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
 use std::io::Write;
 
+use chrono::{DateTime, Utc};
 use clap::{Arg, App, load_yaml};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use rusqlite::{params, Connection};
@@ -15,9 +16,10 @@ mod models;
 mod utils;
 
 use db::*;
-use models::timer::{Timers, Timer};
-use models::event::{Events, Event};
+use models::timer::{Timers, Timer, NewTimer, CreateTimer};
 use models::config::Config;
+use models::project::Project;
+use models::tag::{Tag};
 use errors::{AppResult, AppError, ErrorKind};
 
 fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
@@ -37,31 +39,24 @@ fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
 }
 
 fn timer_start(
-    timers: Timers,
-    project: String,
-    tags: Option<Vec<String>>,
+    conn: &Connection,
+    new_timer: NewTimer,
     config: &Config
 ) -> AppResult<()> {
-    let timer = Timer::new(project, tags);
-
-    //let msg = format!("Started timer at {}", timer.start.format(&config.full_time_format));
-    //timers.append_timer(timer)?;
-    //timers.write_file(&config.data_dir)?;
-    //println!("{}", msg);
 
     Ok(())
 }
 
-fn timer_status(timers: Timers, config: &Config) -> AppResult<()> {
-    let len = timers.0.len();
-    let word = match len {
-        1 => "timer",
-        0 => {
-            println!("No timers are running.");
-            return Ok(())
-        },
-        _ => "timers"
-    };
+fn timer_status(conn: &Connection, config: &Config) -> AppResult<()> {
+    //let len = timers.0.len();
+    //let word = match len {
+        //1 => "timer",
+        //0 => {
+            //println!("No timers are running.");
+            //return Ok(())
+        //},
+        //_ => "timers"
+    //};
     //let mut stdout = StandardStream::stdout(ColorChoice::Always);
     //stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
 
@@ -71,11 +66,11 @@ fn timer_status(timers: Timers, config: &Config) -> AppResult<()> {
     //buffer.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
     //writeln!(&mut buffer, "{}", format!("{} {} found:", len, word));
 
-    let mut i = 1;
-    for timer in timers.0 {
-        timer.pretty_print(&config);
-        i += 1;
-    }
+    //let mut i = 1;
+    //for timer in timers.0 {
+        //timer.pretty_print(&config);
+        //i += 1;
+    //}
 
     //bufwtr.print(&buffer)?;
 
@@ -93,21 +88,28 @@ fn main() -> AppResult<()> {
     let config = load_or_create_config(config_path)?;
 
     let conn = Connection::open(config.data_dir.join("faramir.db"))?;
-    db::init_db(conn)?;
+    db::init_db(&conn)?;
 
-    //let timers = Timers::load_or_create(&config.data_dir)?;
-    //let events = Events::load_or_create(&config.data_dir)?;
+    match matches.subcommand() {
+        ("start", Some(sub_matches)) => {
+            let project = sub_matches.value_of("project").unwrap().into();
+            let tags = match sub_matches.value_of("tags") {
+                Some(tags_string) => Some(
+                    tags_string
+                        .split(",")
+                        .map(|t| t.into())
+                        .collect()),
+                None => None
+            };
+            println!("{:?}", &tags);
+            let new_timer = NewTimer::new(project, tags);
 
-    //match matches.subcommand() {
-        //("start", Some(sub_matches)) => {
-            //let project = sub_matches.value_of("project").unwrap();
-            //timer_start(timers, project.into(), None, &config)
-        //},
-        //("status", Some(sub_matches)) => {
-            //timer_status(timers, &config)
-        //},
-        //("", None) => Err(AppError::from_str("A subcommand must be provided.")),
-        //_ => Err(AppError::from_str("A subcommand must be provided."))
-    //}
-    Ok(())
+            timer_start(&conn, new_timer, &config)
+        },
+        ("status", Some(sub_matches)) => {
+            timer_status(&conn, &config)
+        },
+        ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
+        _ => Err(AppError::from_str("A subcommand must be provided."))
+    }
 }
