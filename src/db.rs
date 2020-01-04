@@ -9,7 +9,7 @@ pub fn init_db(conn: Connection) -> AppResult<usize> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
+            name TEXT UNIQUE NOT NULL
         );",
         params![]
     )?;
@@ -17,7 +17,7 @@ pub fn init_db(conn: Connection) -> AppResult<usize> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS tags (
             id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
+            name TEXT UNIQUE NOT NULL
         );",
         params![]
     )?;
