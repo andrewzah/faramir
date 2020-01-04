@@ -27,10 +27,9 @@ pub fn init_db(conn: &Connection) -> AppResult<usize> {
     conn.execute("
         CREATE TABLE IF NOT EXISTS timers (
             id INTEGER PRIMARY KEY,
-            project_id INTEGER,
+            rid TEXT NOT NULL,
             start TEXT NOT NULL,
-            end TEXT,
-            FOREIGN KEY(project_id) REFERENCES projects(id)
+            end TEXT
         );",
         params![]
     )?;
@@ -44,25 +43,27 @@ pub fn init_db(conn: &Connection) -> AppResult<usize> {
             FOREIGN KEY(timer_id) REFERENCES timers(id)
         );",
         params![]
-    ).map_err(|e| AppError::from(e))
+    )?;
+
+    // projects_timers
+    let result = conn.execute(
+        "CREATE TABLE IF NOT EXISTS projects_timers (
+            project_id INTEGER NOT NULL,
+            timer_id INTEGER NOT NULL,
+            FOREIGN KEY(project_id) REFERENCES projects(id),
+            FOREIGN KEY(timer_id) REFERENCES timers(id)
+        );
+
+        CREATE UNIQUE INDEX projects_timers_idx
+        ON projects_timers (project_id, timer_id);
+        ",
+        params![]
+    );
+
+    result.map_err(|e| AppError::from(e))
 }
 
 pub fn demo_data(conn: &Connection) -> AppResult<usize> {
-    let timers = vec![
-        NewTimer {
-            project: "project1".into(),
-            start: Utc::now(),
-            end: None,
-            tags: None
-        },
-        NewTimer {
-            project: "project2".into(),
-            start: Utc::now(),
-            tags: Some(vec!["tag1".into(), "tag2".into()]),
-            end: None,
-        }
-    ];
-
     conn.execute(
         "
         ",

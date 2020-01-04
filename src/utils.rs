@@ -1,3 +1,13 @@
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+
+pub fn rand_string(len: usize) -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(len)
+        .collect()
+}
+
 pub fn format_seconds(secs: i64) -> String {
     let weeks = secs / 604800;
     let days = (secs % 604800) / 86400;

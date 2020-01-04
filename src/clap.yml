@@ -12,6 +12,28 @@ args:
 subcommands:
   - add:
       about: Manually adds a time duration.
+  - ls:
+      about: List projects, tags, timers.
+      args:
+        - type:
+            long: type
+            help: Specify which type to list.
+            possible_values: [ t, timer, timers, p, project, projects, ta, tag, tags]
+            index: 1
+            required: true
+        - finished:
+            short: f
+            long: finished
+            help: List only finished timers.
+        - complete:
+            short: r
+            long: running
+            help: List only running timers.
+        - detailed:
+            short: d
+            long: detailed
+            help: List extra information such as relations, etc.
+
   - start:
       about: Starts a new timer.
       args:
@@ -32,5 +54,53 @@ subcommands:
         - id:
             short: i
             help: ID of the timer.
+            takes_value: true
+        - all:
+            short: a
+            help: Stop all running timers.
   - status:
       about: Gets the status.
+      args:
+        - detailed:
+            short: d
+            long: detailed
+            help: List detailed start time.
+  - history:
+      about: Gets the last 10 timers.
+      args:
+        - limit:
+            short: l
+            long: limit
+            help: How many timers to return.
+            takes_value: true
+        - include-running:
+            short: r
+            long: include-running
+            help: Include currently running timers.
+  - edit:
+      about: Edit a timer, tag, or project.
+      args:
+        - id:
+            help: The id of the timer to edit.
+            takes_value: true
+            index: 1
+            required: true
+  - rename:
+      about: Rename a tag or project.
+      args:
+        - type:
+            help: The type to edit.
+            takes_value: true
+            index: 1
+            required: true
+            possible_values: [ p, project, projects, ta, tag, tags ]
+        - old-name:
+            help: The name of the project or tag to edit.
+            takes_value: true
+            index: 2
+            required: true
+        - new-name:
+            help: The new name of the project or tag.
+            takes_value: true
+            index: 3
+            required: true
