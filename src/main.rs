@@ -73,6 +73,9 @@ fn main() -> AppResult<()> {
         ("rename", Some(sub_matches)) => {
             rename(&conn, sub_matches)
         },
+        ("rm", Some(sub_matches)) => {
+            rm(&mut conn, sub_matches)
+        },
         ("start", Some(sub_matches)) => {
             let project = sub_matches.value_of("project").unwrap().into();
             let tag_str = sub_matches.value_of("tags");
@@ -87,6 +90,21 @@ fn main() -> AppResult<()> {
         },
         ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
         _ => Err(AppError::from_str("A subcommand must be provided."))
+    }
+}
+
+fn rm(conn: &mut Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+    let id = sub_matches.value_of("id").unwrap();
+    let autoconfirm = sub_matches.is_present("yes");
+
+    match sub_matches.value_of("type").unwrap() {
+        "t" | "timer" | "timers" => db::delete_timer(&conn, id),
+        "p" | "project" | "projects" => db::delete_project(conn, id, autoconfirm),
+        "ta" | "tag" | "tags" => db::delete_tag(&conn, id, autoconfirm),
+        _ => {
+            println!("Type not recognized. Run `faramir rename --help` for possible values.");
+            Err(AppError::from_str("Type not recognized for `rename` subcommand.".into()))
+        }
     }
 }
 

@@ -37,6 +37,24 @@ subcommands:
             short: t
             long: tags
             takes_value: true
+  - rm:
+      about: Remove a project, timer, or tag.
+      args:
+        - type:
+            long: type
+            help: Specify which type to list.
+            possible_values: [ t, timer, timers, p, project, projects, ta, tag, tags]
+            index: 1
+            required: true
+        - id:
+            long: id
+            help: The name of the project/tag, or the id of the timer.
+            index: 2
+            required: true
+        - yes:
+            short: y
+            long: yes
+            help: Delete related fields withOUT confirmation. Dangerous.
   - completions:
       about: Generate auto completions for your shell.
       args:

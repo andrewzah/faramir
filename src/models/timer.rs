@@ -33,11 +33,42 @@ impl Timers {
         Timers(vec![])
     }
 
+    pub fn batch_delete(self, conn: &mut Connection) -> AppResult<()> {
+        let tx = conn.transaction()?;
+        for timer in self.0 {
+            tx.execute("DELETE FROM tags_timers WHERE timer_id = ?1", &[&timer.id])?;
+            tx.execute("DELETE FROM timers WHERE id = ?1", &[&timer.id])?;
+        }
+        tx.commit()
+            .map_err(|e| AppError::from(e))
+    }
+
+    //todo actually make this work
     pub fn for_project(conn: &Connection, project_id: i32) -> AppResult<Self> {
-        let sql = "SELECT timer_id FROM projects_timers WHERE project_id = ?1";
+        let sql = "SELECT t.* FROM projects_timers pt JOIN timers t ON pt.timer_id = t.id WHERE pt.project_id = ?1";
         let mut stmt = conn.prepare(&sql)?;
         let timer_iter = stmt.query_map(&[project_id], |row| {
             Ok(Timer {
+                id: row.get(0)?,
+                rid: row.get(1)?,
+                start: row.get(2)?,
+                end: row.get(3)?,
+            })
+        })?;
+
+        let mut timers = vec![];
+        for timer in timer_iter {
+            timers.push(timer?)
+        }
+
+        Ok(Timers::new(timers))
+    }
+
+    pub fn for_tag(conn: &Connection, project_id: i32) -> AppResult<Self> {
+        let sql = "SELECT t.* FROM tags_timers tt JOIN timers t ON tt.timer_id = t.id WHERE tt.tag_id = ?1";
+        let mut stmt = conn.prepare(&sql)?;
+        let timer_iter = stmt.query_map(&[project_id], |row| {
+            Ok(Timer{
                 id: row.get(0)?,
                 rid: row.get(1)?,
                 start: row.get(2)?,

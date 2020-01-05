@@ -1,5 +1,7 @@
 # Faramir
 
+![Faramir gif](https://66.media.tumblr.com/407768419d9e79c38bf91e77c8a6d142/tumblr_pmpxd3VWEo1wvnem4o3_500.gif)
+
 Faramir is a time tracking cli tool written in Rust, inspired by [Watson](https://github.com/TailorDev/Watson).
 
 Currently in alpha, so changes will occur.
@@ -25,6 +27,18 @@ A different config location can be specified with `-c`.
 * `time_format` is used for the `add` command.
 * `full_time_format` is used when the `-d / --detailed` flag is passed for some commands.
 * `timezone` is a standard timezone. [Find yours here](https://docs.rs/chrono-tz/0.5.1/chrono_tz/enum.Tz.html).
+
+## Model
+
+A `Timer` has an `id`, an `rid` (random id), a `start` (datetime\<utc\>) and `end` (datetime\<utc\>).
+
+`Project`s and `Tag`s have an `id` and a `name`.
+
+Every `Timer` has a `Project`. `Project`s have many `Timer`s.
+
+A `Timer` can have multiple `Tag`s. `Tag`s have many `Timer`s.
+
+Associations are made through join tables, i.e. `projects_timers` and `tags_timers`.
 
 ## Commands
 
@@ -97,13 +111,32 @@ tag1, tag2, tag3
 Rename a `Project` or `Tag`.
 
 ```bash
-% faramir rename p proj1 proj4                                                                                                {master} n
+% faramir rename p proj1 proj4
 
 Successfully renamed project proj1 to proj4.
 ```
 
 You can use `p`, `project`, or `projects` for the `Project` type.
 You can use `t`, `tag`, or `tags` for the `Tag` type.
+
+### rm
+Deletes a project, tag, or timer, and associated records.
+
+```bash
+faramir rm <type> <name/id>
+```
+
+```bash
+% faramir rm p proj1
+
+Project proj1 has 4 timers associated with it. Are you sure you want to remove it?
+If so, type 'y'.
+y
+
+Successfully removed project proj1.
+```
+
+* `-y` / `--yes` => Automatically deletes all related records. Dangerous!
 
 ### start
 Starts a timer at the current time, UTC.
