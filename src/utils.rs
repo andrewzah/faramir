@@ -35,3 +35,14 @@ pub fn serialize_ints(v: Option<Vec<i32>>) -> Option<String> {
         None => None
     }
 }
+
+pub fn parse_tags(tags: Option<&str>) -> Option<Vec<String>> {
+    match tags {
+        Some(tags_string) => Some(
+            tags_string
+                .split(",")
+                .map(|t| t.into())
+                .collect()),
+        None => None
+    }
+}

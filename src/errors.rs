@@ -24,6 +24,8 @@ pub enum ErrorKind {
     IO(std::io::Error),
     SerdeJson(serde_json::error::Error),
     Rusqlite(rusqlite::Error),
+    ChronoParse(chrono::format::ParseError),
+    StringParse(std::string::String)
 }
 
 impl fmt::Display for AppError {
@@ -33,6 +35,8 @@ impl fmt::Display for AppError {
             ErrorKind::IO(ref err) => err.fmt(f),
             ErrorKind::SerdeJson(ref err) => err.fmt(f),
             ErrorKind::Rusqlite(ref err) => err.fmt(f),
+            ErrorKind::ChronoParse(ref err) => err.fmt(f),
+            ErrorKind::StringParse(ref err) => err.fmt(f),
         }
     }
 }
@@ -44,6 +48,8 @@ impl fmt::Debug for AppError {
             ErrorKind::IO(ref err) => err.fmt(f),
             ErrorKind::SerdeJson(ref err) => err.fmt(f),
             ErrorKind::Rusqlite(ref err) => err.fmt(f),
+            ErrorKind::ChronoParse(ref err) => err.fmt(f),
+            ErrorKind::StringParse(ref err) => err.fmt(f),
         }
     }
 }
@@ -64,5 +70,17 @@ impl From<serde_json::error::Error> for AppError {
 impl From<rusqlite::Error> for AppError {
     fn from(err: rusqlite::Error) -> AppError {
         AppError::new(ErrorKind::Rusqlite(err))
+    }
+}
+
+impl From<chrono::format::ParseError> for AppError {
+    fn from(err: chrono::format::ParseError) -> AppError {
+        AppError::new(ErrorKind::ChronoParse(err))
+    }
+}
+
+impl From<std::string::String> for AppError {
+    fn from(err: std::string::String) -> AppError {
+        AppError::new(ErrorKind::StringParse(err))
     }
 }

@@ -143,7 +143,7 @@ impl Timer {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct CreateTimer {
     pub rid: String,
     pub start: DateTime<Utc>,
@@ -151,7 +151,15 @@ pub struct CreateTimer {
 }
 
 impl CreateTimer {
-    pub fn new() -> Self {
+    pub fn new(start: DateTime<Utc>, end: Option<DateTime<Utc>>) -> Self {
+        CreateTimer {
+            rid: rand_string(12),
+            start,
+            end,
+        }
+    }
+
+    pub fn default() -> Self {
         CreateTimer {
             rid: rand_string(12),
             start: Utc::now(),

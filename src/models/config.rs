@@ -8,7 +8,8 @@ use crate::errors::{AppResult, AppError};
 pub struct Config {
     pub data_dir: PathBuf,
     pub time_format: String,
-    pub full_time_format: String
+    pub full_time_format: String,
+    pub timezone: String,
 }
 
 const FARAMIR_DIR: &str = "faramir-tt";
@@ -16,13 +17,15 @@ const FARAMIR_DIR: &str = "faramir-tt";
 impl Default for Config {
     fn default() -> Self {
         let data_dir = Config::default_config_dir();
-        let time_format = "%Y/%m/%d %H:%M".into();
+        let time_format = "%Y/%m/%d %H:%M:%S".into();
         let full_time_format = "%Y/%m/%d %H:%M:%.3f, Day %j, Week %U".into();
+        let timezone = "America/New_York".into();
 
         Config {
             data_dir,
             time_format,
             full_time_format,
+            timezone,
         }
     }
 }

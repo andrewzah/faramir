@@ -12,6 +12,59 @@ args:
 subcommands:
   - add:
       about: Manually add a time duration.
+      args:
+        - confirm:
+            short: c
+            long: confirm
+            help: Visually confirm timer before it gets saved.
+        - end:
+            short: e
+            long: end
+            takes_value: true
+        - duration:
+            short: d
+            long: duration
+            help: A manual duration.
+            takes_value: true
+        - project:
+            index: 1
+            required: true
+        - start:
+            short: s
+            long: start
+            takes_value: true
+        - tags:
+            short: t
+            long: tags
+            takes_value: true
+  - completions:
+      about: Generate auto completions for your shell.
+      args:
+        - shell:
+            takes_value: true
+            index: 1
+            required: true
+            possible_values: [ bash, fish, zsh, powershell, elvish ]
+  - edit:
+      about: Edit a timer, tag, or project.
+      args:
+        - id:
+            help: The id of the timer to edit.
+            takes_value: true
+            index: 1
+            required: true
+  - log:
+      about: Get the last 10 timers.
+      args:
+        - limit:
+            short: l
+            long: limit
+            help: How many timers to return.
+            takes_value: true
+        - include-running:
+            short: r
+            long: include-running
+            help: Include currently running timers.
   - ls:
       about: List projects, tags, timers.
       args:
@@ -33,66 +86,6 @@ subcommands:
             short: d
             long: detailed
             help: List extra information such as relations, etc.
-
-  - start:
-      about: Start a new timer.
-      args:
-        - tags:
-            short: t
-            long: tags
-            help: Attaches tags to the timer.
-            takes_value: true
-        - project:
-            long: project
-            help: Attaches a project to the timer.
-            index: 1
-            required: true
-
-  - stop:
-      about: Stop a timer or the only running timer.
-      args:
-        - id:
-            short: i
-            help: ID of the timer.
-            takes_value: true
-        - all:
-            short: a
-            help: Stop all running timers.
-  - status:
-      about: Get the current status.
-      args:
-        - detailed:
-            short: d
-            long: detailed
-            help: List detailed start time.
-  - log:
-      about: Get the last 10 timers.
-      args:
-        - limit:
-            short: l
-            long: limit
-            help: How many timers to return.
-            takes_value: true
-        - include-running:
-            short: r
-            long: include-running
-            help: Include currently running timers.
-  - edit:
-      about: Edit a timer, tag, or project.
-      args:
-        - id:
-            help: The id of the timer to edit.
-            takes_value: true
-            index: 1
-            required: true
-  - completions:
-      about: Generate auto completions for your shell.
-      args:
-        - shell:
-            takes_value: true
-            index: 1
-            required: true
-            possible_values: [ bash, fish, zsh, powershell, elvish ]
   - rename:
       about: Rename a tag or project.
       args:
@@ -112,3 +105,33 @@ subcommands:
             takes_value: true
             index: 3
             required: true
+  - start:
+      about: Start a new timer.
+      args:
+        - tags:
+            short: t
+            long: tags
+            help: Attaches tags to the timer.
+            takes_value: true
+        - project:
+            long: project
+            help: Attaches a project to the timer.
+            index: 1
+            required: true
+  - status:
+      about: Get the current status.
+      args:
+        - detailed:
+            short: d
+            long: detailed
+            help: List detailed start time.
+  - stop:
+      about: Stop a timer or the only running timer.
+      args:
+        - id:
+            short: i
+            help: ID of the timer.
+            takes_value: true
+        - all:
+            short: a
+            help: Stop all running timers.

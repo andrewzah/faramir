@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.5.1"
 clap = { version = "2.33.0", features = ["yaml"] }
 rand = "0.7.2"
 rusqlite = { version = "0.21.0", features = ["bundled", "chrono"] }

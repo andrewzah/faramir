@@ -6,7 +6,8 @@ use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
 use std::io::{BufWriter, Write};
 use std::process::Command;
 
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime, DateTime, Utc, offset::TimeZone};
+use chrono_tz::{Tz,UTC};
 use clap::{Arg, ArgMatches, App, Shell, load_yaml};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use rusqlite::{params, Connection};
@@ -39,17 +40,6 @@ fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
     }
 }
 
-fn parse_tags(tags: Option<&str>) -> Option<Vec<String>> {
-    match tags {
-        Some(tags_string) => Some(
-            tags_string
-                .split(",")
-                .map(|t| t.into())
-                .collect()),
-        None => None
-    }
-}
-
 fn main() -> AppResult<()> {
     let yaml = load_yaml!("clap.yml");
     let mut app = App::from_yaml(yaml);
@@ -65,11 +55,29 @@ fn main() -> AppResult<()> {
     db::init_db(&conn)?;
 
     match matches.subcommand() {
+        ("add", Some(sub_matches)) => {
+            timer_add(&mut conn, &config, sub_matches)
+        },
+        ("completions", Some(sub_matches)) => {
+            completions(&conn, &mut app, &config, sub_matches)
+        },
+        ("edit", Some(sub_matches)) => {
+            timer_edit(&conn, &config, sub_matches)
+        }
+        ("log", Some(sub_matches)) => {
+            log(&conn, sub_matches)
+        },
+        ("ls", Some(sub_matches)) => {
+            timer_ls(&conn, sub_matches)
+        },
+        ("rename", Some(sub_matches)) => {
+            rename(&conn, sub_matches)
+        },
         ("start", Some(sub_matches)) => {
             let project = sub_matches.value_of("project").unwrap().into();
             let tag_str = sub_matches.value_of("tags");
 
-            timer_start(&mut conn, &config, project, tag_str)
+            timer_start(&mut conn, project, tag_str)
         },
         ("status", Some(sub_matches)) => {
             timer_status(&conn, &config, sub_matches)
@@ -77,24 +85,64 @@ fn main() -> AppResult<()> {
         ("stop", Some(sub_matches)) => {
             timer_stop(&conn, sub_matches)
         },
-        ("ls", Some(sub_matches)) => {
-            timer_ls(&conn, sub_matches)
-        },
-        ("log", Some(sub_matches)) => {
-            log(&conn, sub_matches)
-        },
-        ("rename", Some(sub_matches)) => {
-            rename(&conn, sub_matches)
-        },
-        ("completions", Some(sub_matches)) => {
-            completions(&conn, &mut app, &config, sub_matches)
-        },
-        ("edit", Some(sub_matches)) => {
-            timer_edit(&conn, &config, sub_matches)
-        },
         ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
         _ => Err(AppError::from_str("A subcommand must be provided."))
     }
+}
+
+fn timer_add(conn: &mut Connection, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
+    let tz: Tz = config.timezone.parse()?;
+    let project = sub_matches.value_of("project").unwrap();
+    let tags = sub_matches.value_of("tags");
+
+    if let Some(start_str) = sub_matches.value_of("start") {
+        let end_str = match sub_matches.value_of("end") {
+            Some(end_str) => end_str,
+            None => {
+                println!("If -s/--start is specified, -e/--end must also be specified.");
+                return Ok(())
+            }
+        };
+
+        let start_dt = tz.datetime_from_str(&start_str, &config.time_format)?;
+        let start_utc = start_dt.with_timezone(&Utc);
+
+        let end_dt = tz.datetime_from_str(&end_str, &config.time_format)?;
+        let end_utc = end_dt.with_timezone(&Utc);
+
+        let mut create_timer = CreateTimer::new(start_utc, Some(end_utc));
+
+        if sub_matches.is_present("confirm") {
+            let file_name = format!(".faramir-edit-{}.tmp.json", utils::rand_string(5));
+            let tmp_file_path = &config.data_dir.join(file_name);
+
+            let editor = match env::var("EDITOR") {
+                Ok(editor) => editor,
+                Err(_) => {
+                    println!("Please set the EDITOR environment variable.");
+                    return Ok(())
+                }
+            };
+
+            let json = serde_json::to_string_pretty(&create_timer)?;
+            fs::write(&tmp_file_path, &json)?;
+
+            Command::new(editor)
+                .arg(&tmp_file_path.to_str().unwrap())
+                .status()?;
+
+            let content = fs::read_to_string(&tmp_file_path)?;
+            create_timer = match serde_json::from_str(&content) {
+                Ok(timer) => timer,
+                Err(e) => return Err(AppError::from(e))
+            };
+        }
+
+        db::handle_inserts(conn, project, tags, &create_timer)?;
+        println!("Successfully added timer {}.", create_timer.rid);
+    }
+
+    Ok(())
 }
 
 fn timer_status(conn: &Connection, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
@@ -117,41 +165,12 @@ fn timer_status(conn: &Connection, config: &Config, sub_matches: &ArgMatches) ->
 
 fn timer_start(
     conn: &mut Connection,
-    config: &Config,
     project: &str,
     tag_str: Option<&str>,
 ) -> AppResult<()> {
-
-    //1. create project
-    //2. create tags
-    //3. create timer
-    //4. create projects_timers associations
-    //5. create tags_timers associations
-
-    let project_id = Project::insert_and_get_id(&conn, project)?;
-    let tags = parse_tags(tag_str);
-
-    let tag_ids = match tags {
-        Some(tags) => Some(Tag::batch_insert(conn, tags)?),
-        None => None
-    };
-
-    let create_timer = CreateTimer::new();
-    let timer_id = create_timer.insert_and_get_id(&conn)?;
-
-    conn.execute(
-        "INSERT OR IGNORE INTO projects_timers (project_id, timer_id) VALUES (?1, ?2)",
-        params![project_id, timer_id]
-    )?;
-
-    if let Some(tag_ids) = tag_ids {
-        let tx = conn.transaction()?;
-        for tag_id in tag_ids {
-            tx.execute("INSERT OR IGNORE INTO tags_timers (timer_id, tag_id) VALUES (?1, ?2)", &[timer_id, tag_id])?;
-        }
-        tx.commit()?;
-    }
-
+    let create_timer = CreateTimer::default();
+    db::handle_inserts(conn, project, tag_str, &create_timer)?;
+    println!("Successfully started timer {} for project {}.", create_timer.rid, project);
     Ok(())
 }
 
