@@ -1,11 +1,10 @@
-* stop --at <manual time>
-* rename history->log
-* history --from --to
-
 * cancel command (remove last created currently running timer)
+
+* log --from --to
+  * flesh out log command with -w(eek) -m(onth) etc options
+
+* stats command (show stats like cumulative hours for projects, tags, etc)
+
 * config command
-* edit command (for timers)
 
-* export command (csv, json)
-
-** command line completion??
+* export/backup command (csv, json)
