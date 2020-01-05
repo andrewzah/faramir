@@ -11,7 +11,7 @@ args:
       takes_value: true
 subcommands:
   - add:
-      about: Manually adds a time duration.
+      about: Manually add a time duration.
   - ls:
       about: List projects, tags, timers.
       args:
@@ -35,7 +35,7 @@ subcommands:
             help: List extra information such as relations, etc.
 
   - start:
-      about: Starts a new timer.
+      about: Start a new timer.
       args:
         - tags:
             short: t
@@ -49,7 +49,7 @@ subcommands:
             required: true
 
   - stop:
-      about: Stops a timer or the only running timer.
+      about: Stop a timer or the only running timer.
       args:
         - id:
             short: i
@@ -59,7 +59,7 @@ subcommands:
             short: a
             help: Stop all running timers.
   - status:
-      about: Gets the status.
+      about: Get the current status.
       args:
         - detailed:
             short: d

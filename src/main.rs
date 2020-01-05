@@ -4,6 +4,7 @@
 
 use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
 use std::io::{BufWriter, Write};
+use std::process::Command;
 
 use chrono::{DateTime, Utc};
 use clap::{Arg, ArgMatches, App, Shell, load_yaml};
@@ -88,6 +89,9 @@ fn main() -> AppResult<()> {
         ("completions", Some(sub_matches)) => {
             completions(&conn, &mut app, &config, sub_matches)
         },
+        ("edit", Some(sub_matches)) => {
+            timer_edit(&conn, &config, sub_matches)
+        },
         ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
         _ => Err(AppError::from_str("A subcommand must be provided."))
     }
@@ -124,27 +128,22 @@ fn timer_start(
     //4. create projects_timers associations
     //5. create tags_timers associations
 
-    println!("inserting project");
     let project_id = Project::insert_and_get_id(&conn, project)?;
     let tags = parse_tags(tag_str);
 
-    println!("inserting tags");
     let tag_ids = match tags {
         Some(tags) => Some(Tag::batch_insert(conn, tags)?),
         None => None
     };
 
-    println!("inserting timer");
     let create_timer = CreateTimer::new();
     let timer_id = create_timer.insert_and_get_id(&conn)?;
 
-    println!("inserting projects_timers");
     conn.execute(
         "INSERT OR IGNORE INTO projects_timers (project_id, timer_id) VALUES (?1, ?2)",
         params![project_id, timer_id]
     )?;
 
-    println!("inserting tags_timers");
     if let Some(tag_ids) = tag_ids {
         let tx = conn.transaction()?;
         for tag_id in tag_ids {
@@ -314,5 +313,52 @@ fn completions(conn: &Connection, app: &mut App, config: &Config, sub_matches: &
         &mut f
     );
 
+    Ok(())
+}
+
+fn timer_edit(conn: &Connection, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
+    let rid = sub_matches.value_of("id").unwrap();
+    let file_name = format!(".faramir-edit-{}.tmp.json", utils::rand_string(5));
+    let tmp_file_path = config.data_dir.join(file_name);
+
+    let old_timer = match Timer::find_by(&conn, "rid", rid) {
+        Ok(timer) => timer,
+        Err(e) => return Err(e)
+    };
+
+    let json = serde_json::to_string_pretty(&old_timer)?;
+    fs::write(&tmp_file_path, &json)?;
+
+    let editor = match env::var("EDITOR") {
+        Ok(editor) => editor,
+        Err(_) => {
+            println!("Please set the EDITOR environment variable.");
+            return Ok(())
+        }
+    };
+
+    Command::new(editor)
+        .arg(&tmp_file_path.to_str().unwrap())
+        .status()?;
+
+    let content = fs::read_to_string(&tmp_file_path)?;
+    let new_timer: Timer = match serde_json::from_str(&content) {
+        Ok(timer) => timer,
+        Err(e) => return Err(AppError::from(e))
+    };
+
+    if old_timer.id != new_timer.id {
+        println!("The IDs of the timers don't match.");
+        return Ok(())
+    }
+
+    if old_timer.rid != new_timer.rid {
+        println!("The RIDs of the timers don't match.");
+        return Ok(())
+    }
+
+    new_timer.update(&conn)?;
+    println!("Updated timer {}", new_timer.rid);
+    fs::remove_file(tmp_file_path)?;
     Ok(())
 }

@@ -90,7 +90,7 @@ impl Timers {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Timer {
     pub id: i32,
     pub rid: String,
@@ -115,8 +115,8 @@ impl Timer {
     }
 
     pub fn update(&self, conn: &Connection) -> AppResult<()> {
-        let sql = "UPDATE timers SET end=?2 WHERE id = ?1";
-        conn.execute(&sql, params![self.id, self.end])?;
+        let sql = "UPDATE timers SET start=?2,end=?3 WHERE id = ?1";
+        conn.execute(&sql, params![self.id, self.start, self.end])?;
 
         Ok(())
     }
@@ -161,7 +161,6 @@ impl CreateTimer {
 
     pub fn insert_and_get_id(&self, conn: &Connection) -> AppResult<i32> {
         &self.insert(&conn)?;
-        println!("rid: {}", &self.rid);
         let timer = Timer::find_by(&conn, "rid", &self.rid)?;
         Ok(timer.id)
     }
