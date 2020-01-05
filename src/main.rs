@@ -1,28 +1,24 @@
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
-use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
-use std::io::{BufWriter, Write};
+use std::{path::PathBuf, fs, fs::File, env};
+use std::io::BufWriter;
 use std::process::Command;
 
-use chrono::{NaiveDateTime, DateTime, Utc, offset::TimeZone};
-use chrono_tz::{Tz,UTC};
-use clap::{Arg, ArgMatches, App, Shell, load_yaml};
-use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-use rusqlite::{params, Connection};
+use chrono::{Utc, offset::TimeZone};
+use chrono_tz::Tz;
+use clap::{ArgMatches, App, Shell, load_yaml};
+use rusqlite::Connection;
 
 mod db;
 mod errors;
 mod models;
 mod utils;
 
-use db::*;
-use models::timer::{Timers, Timer, CreateTimer};
-use models::config::Config;
-use models::project::{Projects, Project};
-use models::tag::{Tag, Tags};
-use errors::{AppResult, AppError, ErrorKind};
+use models::{
+    config::Config,
+    project::{Project, Projects},
+    tag::{Tag, Tags},
+    timer::{CreateTimer, Timers, Timer},
+};
+use errors::{AppError, AppResult, ErrorKind};
 
 fn load_or_create_config(config_path: PathBuf) -> AppResult<Config> {
     match Config::from_path(&config_path) {
@@ -59,7 +55,7 @@ fn main() -> AppResult<()> {
             timer_add(&mut conn, &config, sub_matches)
         },
         ("completions", Some(sub_matches)) => {
-            completions(&conn, &mut app, &config, sub_matches)
+            completions(&mut app, &config, sub_matches)
         },
         ("edit", Some(sub_matches)) => {
             timer_edit(&conn, &config, sub_matches)
@@ -248,7 +244,7 @@ fn ls_projects(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
     Ok(())
 }
 
-fn ls_tags(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+fn ls_tags(conn: &Connection, _sub_matches: &ArgMatches) -> AppResult<()> {
     //TODO detailed
     let tags = Tags::all(&conn)?;
     if tags.len() == 0 {
@@ -328,7 +324,7 @@ fn log(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
     Ok(())
 }
 
-fn completions(conn: &Connection, app: &mut App, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
+fn completions(app: &mut App, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
     let shell_name = sub_matches.value_of("shell").unwrap();
     let path = &config.data_dir.join(format!("faramir.{}-completion", &shell_name));
 

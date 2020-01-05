@@ -1,4 +1,4 @@
-use rusqlite::{NO_PARAMS, params, named_params, Connection};
+use rusqlite::{NO_PARAMS, params, Connection};
 
 use crate::errors::{AppError, AppResult};
 
@@ -79,10 +79,6 @@ pub struct Tag {
     pub name: String,
 }
 
-pub struct NewTag {
-    pub name: String,
-}
-
 impl Tag {
     pub fn batch_insert(conn: &mut Connection, names: Vec<String>) -> AppResult<Vec<i32>> {
         let tx = conn.transaction()?;
@@ -104,6 +100,8 @@ impl Tag {
         }).map_err(|e| AppError::from(e))
     }
 
+
+    #[allow(dead_code)]
     pub fn insert(conn: &Connection, name: &str) -> AppResult<usize> {
         conn.execute(
             "INSERT OR IGNORE INTO tags (name) VALUES (?1)",

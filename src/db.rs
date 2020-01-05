@@ -1,6 +1,5 @@
 use std::io;
 
-use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 
 use crate::errors::*;
@@ -66,14 +65,6 @@ pub fn init_db(conn: &Connection) -> AppResult<usize> {
     );
 
     result.map_err(|e| AppError::from(e))
-}
-
-pub fn demo_data(conn: &Connection) -> AppResult<usize> {
-    conn.execute(
-        "
-        ",
-        params![]
-    ).map_err(|e| AppError::from(e))
 }
 
 pub fn delete_project(conn: &mut Connection, name: &str, autoconfirm: bool) -> AppResult<()> {

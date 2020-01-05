@@ -1,16 +1,16 @@
-use std::{io, io::Write, path::{Path, PathBuf}, fs, fs::File, env};
-
-use chrono::{Duration, DateTime, Utc};
-use rusqlite::{named_params, params, Connection};
+use chrono::{DateTime, Utc};
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
-use crate::errors::{AppResult, AppError};
-use crate::models::config::Config;
-use crate::models::project::Project;
-use crate::models::tag::Tag;
-use crate::utils::{rand_string, serialize_ints, format_seconds};
+use crate::{
+    errors::{AppResult, AppError},
+    models::config::Config,
+    utils::{rand_string, format_seconds},
+};
+
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Timers(pub Vec<Timer>);
 impl Timers {
     pub fn len(&self) -> usize {
@@ -29,6 +29,7 @@ impl Timers {
         Timers(timers)
     }
 
+    #[allow(dead_code)]
     pub fn default() -> Self {
         Timers(vec![])
     }
@@ -104,6 +105,7 @@ impl Timers {
         Ok(Timers::new(timers))
     }
 
+    #[allow(dead_code)]
     pub fn all(conn: &Connection) -> AppResult<Self> {
         Timers::load(&conn, "")
     }
@@ -112,6 +114,7 @@ impl Timers {
         Timers::load(&conn, "WHERE end IS NULL")
     }
 
+    #[allow(dead_code)]
     pub fn finished(conn: &Connection) -> AppResult<Self> {
         Timers::load(&conn, "WHERE end IS NOT NULL")
     }

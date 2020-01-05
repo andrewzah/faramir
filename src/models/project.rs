@@ -65,10 +65,6 @@ pub struct Project {
     pub name: String,
 }
 
-pub struct NewProject {
-    pub name: String,
-}
-
 impl Project {
     pub fn insert_and_get_id(conn: &Connection, name: &str) -> AppResult<i32> {
         Project::insert(&conn, &name)?;

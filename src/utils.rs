@@ -21,21 +21,6 @@ pub fn format_seconds(secs: i64) -> String {
     )
 }
 
-pub fn serialize_ints(v: Option<Vec<i32>>) -> Option<String> {
-    match v {
-        Some(values) => {
-            let result = values
-                .iter()
-                .map(|i| i.to_string())
-                .collect::<Vec<String>>()
-                .join(",");
-
-            Some(result)
-        },
-        None => None
-    }
-}
-
 pub fn parse_tags(tags: Option<&str>) -> Option<Vec<String>> {
     match tags {
         Some(tags_string) => Some(
