@@ -69,6 +69,25 @@ impl Tags {
 
         Ok(Tags::new(tags))
     }
+
+    pub fn for_timer(conn: &Connection, timer_id: i32) -> AppResult<Self> {
+        let sql = "SELECT ta.* FROM tags ta JOIN tags_timers tt ON tt.tag_id \
+                   = ta.id WHERE tt.timer_id = ?1";
+        let mut stmt = conn.prepare(sql)?;
+        let tag_iter = stmt.query_map(&[timer_id], |row| {
+            Ok(Tag {
+                id:   row.get(0)?,
+                name: row.get(1)?,
+            })
+        })?;
+
+        let mut tags = vec![];
+        for tag in tag_iter {
+            tags.push(tag?);
+        }
+
+        Ok(Tags::new(tags))
+    }
 }
 
 pub struct Tag {

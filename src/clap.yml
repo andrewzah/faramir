@@ -126,11 +126,10 @@ subcommands:
   - start:
       about: Start a new timer.
       args:
-        - tags:
-            short: t
-            long: tags
-            help: Attaches tags to the timer.
-            takes_value: true
+        - keep:
+            short: k
+            long: keep
+            help: Keeps the same project and tags from the previous timer.
         - note:
             short: n
             long: note
@@ -140,7 +139,11 @@ subcommands:
             long: project
             help: Attaches a project to the timer.
             index: 1
-            required: true
+        - tags:
+            short: t
+            long: tags
+            help: Attaches tags to the timer.
+            takes_value: true
   - status:
       about: Get the current status.
       args:

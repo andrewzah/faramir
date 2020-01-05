@@ -178,22 +178,57 @@ fn timer_status(
     Ok(())
 }
 
-fn timer_start( conn: &mut Connection, sub_matches: &ArgMatches) -> AppResult<()> {
-    let project = sub_matches.value_of("project").unwrap().into();
-    let tag_str = sub_matches.value_of("tags");
+fn timer_start(
+    conn: &mut Connection, sub_matches: &ArgMatches,
+) -> AppResult<()> {
     let note = match sub_matches.value_of("note") {
         Some(note_str) => Some(note_str.into()),
         None => None,
     };
 
-    let mut create_timer = CreateTimer::default();
-    create_timer.note = note;
+    match sub_matches.is_present("keep") {
+        true => {
+            let last_timer = Timer::last(&conn)?;
+            let project = Project::for_timer(&conn, last_timer.id)?;
+            let tags = Tags::for_timer(&conn, last_timer.id)?;
+            let tag_str = tags
+                .0
+                .into_iter()
+                .map(|t| t.name)
+                .collect::<Vec<String>>()
+                .join(",");
+            let mut create_timer = CreateTimer::default();
+            create_timer.note = note;
 
-    db::handle_inserts(conn, project, tag_str, &create_timer)?;
-    println!(
-        "Successfully started timer {} for project {}.",
-        create_timer.rid, project
-    );
+            db::handle_inserts(
+                conn,
+                &project.name,
+                Some(&tag_str),
+                &create_timer,
+            )?;
+        },
+        false => {
+            let project = match sub_matches.value_of("project") {
+                Some(p) => p,
+                None => {
+                    return Err(AppError::from_str(
+                        "Please specify a project name.",
+                    ));
+                },
+            };
+            let tag_str = sub_matches.value_of("tags");
+
+            let mut create_timer = CreateTimer::default();
+            create_timer.note = note;
+
+            db::handle_inserts(conn, project, tag_str, &create_timer)?;
+            println!(
+                "Successfully started timer {} for project {}.",
+                create_timer.rid, project
+            );
+        },
+    };
+
     Ok(())
 }
 

@@ -8,6 +8,53 @@ Currently in alpha, so changes will occur.
 
 All times are stored in UTC.
 
+## Usage
+
+See commands below for more detailed information.
+
+```bash
+% faramir start demo_project -t tag1,tag2 -n "my custom note text"
+
+Successfully started timer b0PQh7q1eqKc for project demo_project.
+
+% faramir status
+
+1 timer(s) found.
+  Timer for project demo_project - with id b0PQh7q1eqKc
+  Elapsed Time: 0w, 0d, 0h, 0m, 24s
+  Start Time: 2020/01/05 21:32:10
+
+% faramir stop
+# or: faramir stop -i b0PQh7q1eqKc
+Stopped timer b0PQh7q1eqKc.
+
+% faramir ls projects
+# or: faramir ls p
+1 Project(s) found.
+demo_project
+
+% faramir ls tags
+% or: faramir ls ta
+2 Tag(s) found.
+tags: tag1, tag2
+
+% faramir edit b0PQh7q1eqKc
+# this opens a tmp json file with $EDITOR to edit
+
+% faramir log
+# all times are stored as UTC. this will become prettier!
+1 timer(s) retrieved.
+b0PQh7q1eqKc - start: 2020-01-05 21:32:10.579684938 UTC, end: 2020-01-05 21:34:30.199521260 UTC
+
+% faramir rm timer b0PQh7q1eqKc
+# or faramir rm t ...
+# or faramir rm p(roject) ...
+Successfully deleted timer b0PQh7q1eqKc.
+  start: 2020-01-05 21:32:10.579684938 UTC, end: Some(2020-01-05T21:34:30.199521260Z)
+```
+
+todo (soon TM): commands for detailed reporting.
+
 ## Config
 
 By default, faramir looks for `$XDG_CONFIG_HOME`. If this isn't set, it puts `faramir-tt/` under `$HOME/.config/`.
@@ -144,10 +191,14 @@ Starts a timer at the current time, UTC.
 This automatically creates the passed in project and tags. Tags are optional.
 
 ```bash
-% faramir start proj5 -t tag3,tag4
+% faramir start proj5 -t tag3,tag4 -n "my note text here"
 
 Successfully started timer Ga4SXq8XuZi1 for project proj5.
+
+% faramir start -k
 ```
+
+* `-k` / `--keep` => Use the same project and tags as last time.
 
 ### status
 Displays the status of any running timers.

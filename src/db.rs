@@ -204,9 +204,9 @@ pub fn handle_inserts(
         let tx = conn.transaction()?;
         for tag_id in tag_ids {
             tx.execute(
-                "INSERT OR IGNORE INTO tags_timers (timer_id, tag_id) VALUES \
+                "INSERT OR IGNORE INTO tags_timers (tag_id, timer_id) VALUES \
                  (?1, ?2)",
-                &[timer_id, tag_id],
+                &[tag_id, timer_id],
             )?;
         }
         tx.commit()?;
