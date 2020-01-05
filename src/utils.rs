@@ -1,11 +1,7 @@
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 pub fn rand_string(len: usize) -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(len)
-        .collect()
+    thread_rng().sample_iter(&Alphanumeric).take(len).collect()
 }
 
 pub fn format_seconds(secs: i64) -> String {
@@ -23,11 +19,9 @@ pub fn format_seconds(secs: i64) -> String {
 
 pub fn parse_tags(tags: Option<&str>) -> Option<Vec<String>> {
     match tags {
-        Some(tags_string) => Some(
-            tags_string
-                .split(",")
-                .map(|t| t.into())
-                .collect()),
-        None => None
+        Some(tags_string) => {
+            Some(tags_string.split(",").map(|t| t.into()).collect())
+        },
+        None => None,
     }
 }

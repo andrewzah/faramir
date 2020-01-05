@@ -1,15 +1,18 @@
-use std::{path::{Path, PathBuf}, fs, env};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
-use crate::errors::{AppResult, AppError};
+use crate::errors::{AppError, AppResult};
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
-    pub data_dir: PathBuf,
-    pub time_format: String,
+    pub data_dir:         PathBuf,
+    pub time_format:      String,
     pub full_time_format: String,
-    pub timezone: String,
+    pub timezone:         String,
 }
 
 const FARAMIR_DIR: &str = "faramir-tt";
@@ -42,7 +45,7 @@ impl Config {
             config_path = PathBuf::from(".");
         }
 
-        return config_path.join(FARAMIR_DIR)
+        return config_path.join(FARAMIR_DIR);
     }
 
     pub fn default_config_path() -> PathBuf {
@@ -52,7 +55,9 @@ impl Config {
     pub fn make_default_config(path: &Path) -> AppResult<Config> {
         let parent = match path.parent() {
             Some(p) => p,
-            None => return Err(AppError::from_str("Unable to get path parent"))
+            None => {
+                return Err(AppError::from_str("Unable to get path parent"))
+            },
         };
         fs::create_dir_all(&parent)?;
 
@@ -69,7 +74,7 @@ impl Config {
         let content = fs::read_to_string(path)?;
         match serde_json::from_str(&content) {
             Ok(config) => Ok(config),
-            Err(e) => Err(AppError::from(e))
+            Err(e) => Err(AppError::from(e)),
         }
     }
 }

@@ -25,7 +25,7 @@ pub enum ErrorKind {
     SerdeJson(serde_json::error::Error),
     Rusqlite(rusqlite::Error),
     ChronoParse(chrono::format::ParseError),
-    StringParse(std::string::String)
+    StringParse(std::string::String),
 }
 
 impl fmt::Display for AppError {
@@ -65,7 +65,6 @@ impl From<serde_json::error::Error> for AppError {
         AppError::new(ErrorKind::SerdeJson(err))
     }
 }
-
 
 impl From<rusqlite::Error> for AppError {
     fn from(err: rusqlite::Error) -> AppError {

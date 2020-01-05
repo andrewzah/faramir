@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
-use rusqlite::{Connection, params, NO_PARAMS};
+use rusqlite::{params, Connection, NO_PARAMS};
 
-use crate::errors::{AppError,AppResult};
-use crate::models::timer::Timers;
+use crate::{
+    errors::{AppError, AppResult},
+    models::timer::Timers,
+};
 
 pub struct Projects(Vec<Project>);
 
@@ -14,7 +16,14 @@ impl Projects {
 
     pub fn print_basic(self) {
         println!("{} Project(s) found.", self.len());
-        println!("{}", self.0.into_iter().map(|p| p.name).collect::<Vec<String>>().join(", "));
+        println!(
+            "{}",
+            self.0
+                .into_iter()
+                .map(|p| p.name)
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
     }
 
     pub fn print_detailed(&self, conn: &Connection) -> AppResult<()> {
@@ -28,7 +37,11 @@ impl Projects {
         }
 
         for project in &self.0 {
-            println!("{} - {} timer(s) found.", &project.name, project_timers.get(&project.name).unwrap().len())
+            println!(
+                "{} - {} timer(s) found.",
+                &project.name,
+                project_timers.get(&project.name).unwrap().len()
+            )
         }
 
         Ok(())
@@ -46,7 +59,7 @@ impl Projects {
         let mut stmt = conn.prepare("SELECT * FROM projects ORDER BY name")?;
         let project_iter = stmt.query_map(NO_PARAMS, |row| {
             Ok(Project {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
         })?;
@@ -61,7 +74,7 @@ impl Projects {
 }
 
 pub struct Project {
-    pub id: i32,
+    pub id:   i32,
     pub name: String,
 }
 
@@ -75,8 +88,9 @@ impl Project {
     pub fn insert(conn: &Connection, name: &str) -> AppResult<usize> {
         conn.execute(
             "INSERT OR IGNORE INTO projects (name) VALUES (?1)",
-            &[name]
-        ).map_err(|e| AppError::from(e))
+            &[name],
+        )
+        .map_err(|e| AppError::from(e))
     }
 
     pub fn update(&self, conn: &Connection, new_name: &str) -> AppResult<()> {
@@ -87,27 +101,32 @@ impl Project {
     }
 
     pub fn find_by_name(conn: &Connection, name: &str) -> AppResult<Project> {
-        let mut stmt = conn.prepare("SELECT * FROM projects WHERE name = ?1")?;
+        let mut stmt =
+            conn.prepare("SELECT * FROM projects WHERE name = ?1")?;
         stmt.query_row(&[name], |row| {
             Ok(Project {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
-        }).map_err(|e| AppError::from(e))
+        })
+        .map_err(|e| AppError::from(e))
     }
 
     pub fn find(conn: &Connection, project_id: i32) -> AppResult<Project> {
         let mut stmt = conn.prepare("SELECT * FROM projects WHERE id = ?1")?;
         stmt.query_row(&[project_id], |row| {
             Ok(Project {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
-        }).map_err(|e| AppError::from(e))
+        })
+        .map_err(|e| AppError::from(e))
     }
 
     pub fn for_timer(conn: &Connection, timer_id: i32) -> AppResult<Project> {
-        let mut stmt = conn.prepare("SELECT project_id FROM projects_timers WHERE timer_id = ?1")?;
+        let mut stmt = conn.prepare(
+            "SELECT project_id FROM projects_timers WHERE timer_id = ?1",
+        )?;
         let project_id = stmt.query_row(&[timer_id], |row| row.get(0))?;
         Project::find(&conn, project_id)
     }

@@ -1,4 +1,4 @@
-use rusqlite::{NO_PARAMS, params, Connection};
+use rusqlite::{params, Connection, NO_PARAMS};
 
 use crate::errors::{AppError, AppResult};
 
@@ -10,19 +10,13 @@ impl Tags {
     }
 
     pub fn ids(&self) -> AppResult<Vec<i32>> {
-        let ids = self.0
-            .iter()
-            .map(|t| t.id)
-            .collect::<Vec<i32>>();
+        let ids = self.0.iter().map(|t| t.id).collect::<Vec<i32>>();
 
         Ok(ids)
     }
 
     pub fn names(self) -> Vec<String> {
-        self.0
-            .into_iter()
-            .map(|t| t.name)
-            .collect()
+        self.0.into_iter().map(|t| t.name).collect()
     }
 
     pub fn new(tags: Vec<Tag>) -> Self {
@@ -37,7 +31,7 @@ impl Tags {
         let mut stmt = conn.prepare("SELECT * FROM tags ORDER BY name")?;
         let tag_iter = stmt.query_map(NO_PARAMS, |row| {
             Ok(Tag {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
         })?;
@@ -57,10 +51,13 @@ impl Tags {
             .collect::<Vec<String>>()
             .join(",");
 
-        let mut stmt = conn.prepare(&format!("select * from tags where name in ({})", joined))?;
+        let mut stmt = conn.prepare(&format!(
+            "select * from tags where name in ({})",
+            joined
+        ))?;
         let tag_iter = stmt.query_map(NO_PARAMS, |row| {
             Ok(Tag {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
         })?;
@@ -75,15 +72,20 @@ impl Tags {
 }
 
 pub struct Tag {
-    pub id: i32,
+    pub id:   i32,
     pub name: String,
 }
 
 impl Tag {
-    pub fn batch_insert(conn: &mut Connection, names: Vec<String>) -> AppResult<Vec<i32>> {
+    pub fn batch_insert(
+        conn: &mut Connection, names: Vec<String>,
+    ) -> AppResult<Vec<i32>> {
         let tx = conn.transaction()?;
         for name in &names {
-            tx.execute("INSERT OR IGNORE INTO tags (name) VALUES (?1)", &[name])?;
+            tx.execute(
+                "INSERT OR IGNORE INTO tags (name) VALUES (?1)",
+                &[name],
+            )?;
         }
         tx.commit()?;
 
@@ -94,19 +96,17 @@ impl Tag {
         let mut stmt = conn.prepare("SELECT * FROM tags WHERE name = ?1")?;
         stmt.query_row(&[name], |row| {
             Ok(Tag {
-                id: row.get(0)?,
+                id:   row.get(0)?,
                 name: row.get(1)?,
             })
-        }).map_err(|e| AppError::from(e))
+        })
+        .map_err(|e| AppError::from(e))
     }
-
 
     #[allow(dead_code)]
     pub fn insert(conn: &Connection, name: &str) -> AppResult<usize> {
-        conn.execute(
-            "INSERT OR IGNORE INTO tags (name) VALUES (?1)",
-            &[name]
-        ).map_err(|e| AppError::from(e))
+        conn.execute("INSERT OR IGNORE INTO tags (name) VALUES (?1)", &[name])
+            .map_err(|e| AppError::from(e))
     }
 
     pub fn update(&self, conn: &Connection, new_name: &str) -> AppResult<()> {

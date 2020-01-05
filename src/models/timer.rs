@@ -3,11 +3,10 @@ use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    errors::{AppResult, AppError},
+    errors::{AppError, AppResult},
     models::config::Config,
-    utils::{rand_string, format_seconds},
+    utils::{format_seconds, rand_string},
 };
-
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -37,23 +36,26 @@ impl Timers {
     pub fn batch_delete(self, conn: &mut Connection) -> AppResult<()> {
         let tx = conn.transaction()?;
         for timer in self.0 {
-            tx.execute("DELETE FROM tags_timers WHERE timer_id = ?1", &[&timer.id])?;
+            tx.execute(
+                "DELETE FROM tags_timers WHERE timer_id = ?1",
+                &[&timer.id],
+            )?;
             tx.execute("DELETE FROM timers WHERE id = ?1", &[&timer.id])?;
         }
-        tx.commit()
-            .map_err(|e| AppError::from(e))
+        tx.commit().map_err(|e| AppError::from(e))
     }
 
     //todo actually make this work
     pub fn for_project(conn: &Connection, project_id: i32) -> AppResult<Self> {
-        let sql = "SELECT t.* FROM projects_timers pt JOIN timers t ON pt.timer_id = t.id WHERE pt.project_id = ?1";
+        let sql = "SELECT t.* FROM projects_timers pt JOIN timers t ON \
+                   pt.timer_id = t.id WHERE pt.project_id = ?1";
         let mut stmt = conn.prepare(&sql)?;
         let timer_iter = stmt.query_map(&[project_id], |row| {
             Ok(Timer {
-                id: row.get(0)?,
-                rid: row.get(1)?,
+                id:    row.get(0)?,
+                rid:   row.get(1)?,
                 start: row.get(2)?,
-                end: row.get(3)?,
+                end:   row.get(3)?,
             })
         })?;
 
@@ -66,14 +68,15 @@ impl Timers {
     }
 
     pub fn for_tag(conn: &Connection, project_id: i32) -> AppResult<Self> {
-        let sql = "SELECT t.* FROM tags_timers tt JOIN timers t ON tt.timer_id = t.id WHERE tt.tag_id = ?1";
+        let sql = "SELECT t.* FROM tags_timers tt JOIN timers t ON \
+                   tt.timer_id = t.id WHERE tt.tag_id = ?1";
         let mut stmt = conn.prepare(&sql)?;
         let timer_iter = stmt.query_map(&[project_id], |row| {
-            Ok(Timer{
-                id: row.get(0)?,
-                rid: row.get(1)?,
+            Ok(Timer {
+                id:    row.get(0)?,
+                rid:   row.get(1)?,
                 start: row.get(2)?,
-                end: row.get(3)?,
+                end:   row.get(3)?,
             })
         })?;
 
@@ -90,10 +93,10 @@ impl Timers {
         let mut stmt = conn.prepare(&sql)?;
         let timer_iter = stmt.query_map(params![], |row| {
             Ok(Timer {
-                id: row.get(0)?,
-                rid: row.get(1)?,
+                id:    row.get(0)?,
+                rid:   row.get(1)?,
                 start: row.get(2)?,
-                end: row.get(3)?,
+                end:   row.get(3)?,
             })
         })?;
 
@@ -126,10 +129,10 @@ impl Timers {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Timer {
-    pub id: i32,
-    pub rid: String,
+    pub id:    i32,
+    pub rid:   String,
     pub start: DateTime<Utc>,
-    pub end: Option<DateTime<Utc>>,
+    pub end:   Option<DateTime<Utc>>,
 }
 
 impl Timer {
@@ -163,25 +166,28 @@ impl Timer {
         Ok(())
     }
 
-    pub fn find_by(conn: &Connection, column: &str, val: &str) -> AppResult<Timer> {
+    pub fn find_by(
+        conn: &Connection, column: &str, val: &str,
+    ) -> AppResult<Timer> {
         let sql = format!("SELECT * FROM timers WHERE {} = ?1", column);
         let mut stmt = conn.prepare(&sql)?;
         stmt.query_row(&[val], |row| {
             Ok(Timer {
-                id: row.get(0)?,
-                rid: row.get(1)?,
+                id:    row.get(0)?,
+                rid:   row.get(1)?,
                 start: row.get(2)?,
-                end: row.get(3)?,
+                end:   row.get(3)?,
             })
-        }).map_err(|e| AppError::from(e))
+        })
+        .map_err(|e| AppError::from(e))
     }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateTimer {
-    pub rid: String,
+    pub rid:   String,
     pub start: DateTime<Utc>,
-    pub end: Option<DateTime<Utc>>,
+    pub end:   Option<DateTime<Utc>>,
 }
 
 impl CreateTimer {
@@ -195,9 +201,9 @@ impl CreateTimer {
 
     pub fn default() -> Self {
         CreateTimer {
-            rid: rand_string(12),
+            rid:   rand_string(12),
             start: Utc::now(),
-            end: None,
+            end:   None,
         }
     }
 
@@ -209,8 +215,10 @@ impl CreateTimer {
 
     pub fn insert(&self, conn: &Connection) -> AppResult<usize> {
         conn.execute(
-            "INSERT OR IGNORE INTO timers (rid, start, end) VALUES (?1, ?2, ?3)",
-            params![self.rid, self.start, self.end]
-        ).map_err(|e| AppError::from(e))
+            "INSERT OR IGNORE INTO timers (rid, start, end) VALUES (?1, ?2, \
+             ?3)",
+            params![self.rid, self.start, self.end],
+        )
+        .map_err(|e| AppError::from(e))
     }
 }
