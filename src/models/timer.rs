@@ -52,10 +52,11 @@ impl Timers {
         let mut stmt = conn.prepare(&sql)?;
         let timer_iter = stmt.query_map(&[project_id], |row| {
             Ok(Timer {
-                id:    row.get(0)?,
-                rid:   row.get(1)?,
-                start: row.get(2)?,
-                end:   row.get(3)?,
+                id:     row.get(0)?,
+                rid:    row.get(1)?,
+                start:  row.get(2)?,
+                end:    row.get(3)?,
+                note:   row.get(4)?,
             })
         })?;
 
@@ -77,6 +78,7 @@ impl Timers {
                 rid:   row.get(1)?,
                 start: row.get(2)?,
                 end:   row.get(3)?,
+                note:  row.get(4)?,
             })
         })?;
 
@@ -97,6 +99,7 @@ impl Timers {
                 rid:   row.get(1)?,
                 start: row.get(2)?,
                 end:   row.get(3)?,
+                note:   row.get(4)?,
             })
         })?;
 
@@ -133,6 +136,7 @@ pub struct Timer {
     pub rid:   String,
     pub start: DateTime<Utc>,
     pub end:   Option<DateTime<Utc>>,
+    pub note: Option<String>,
 }
 
 impl Timer {
@@ -177,6 +181,7 @@ impl Timer {
                 rid:   row.get(1)?,
                 start: row.get(2)?,
                 end:   row.get(3)?,
+                note:   row.get(4)?,
             })
         })
         .map_err(|e| AppError::from(e))
@@ -188,14 +193,16 @@ pub struct CreateTimer {
     pub rid:   String,
     pub start: DateTime<Utc>,
     pub end:   Option<DateTime<Utc>>,
+    pub note:   Option<String>,
 }
 
 impl CreateTimer {
-    pub fn new(start: DateTime<Utc>, end: Option<DateTime<Utc>>) -> Self {
+    pub fn new(start: DateTime<Utc>, end: Option<DateTime<Utc>>, note: Option<String>) -> Self {
         CreateTimer {
             rid: rand_string(12),
             start,
             end,
+            note
         }
     }
 
@@ -204,6 +211,7 @@ impl CreateTimer {
             rid:   rand_string(12),
             start: Utc::now(),
             end:   None,
+            note:   None,
         }
     }
 
@@ -215,9 +223,9 @@ impl CreateTimer {
 
     pub fn insert(&self, conn: &Connection) -> AppResult<usize> {
         conn.execute(
-            "INSERT OR IGNORE INTO timers (rid, start, end) VALUES (?1, ?2, \
-             ?3)",
-            params![self.rid, self.start, self.end],
+            "INSERT OR IGNORE INTO timers (rid, start, end, note) \
+            VALUES (?1, ?2, ?3, ?4)",
+            params![self.rid, self.start, self.end, self.note],
         )
         .map_err(|e| AppError::from(e))
     }

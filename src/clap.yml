@@ -131,6 +131,11 @@ subcommands:
             long: tags
             help: Attaches tags to the timer.
             takes_value: true
+        - note:
+            short: n
+            long: note
+            help: Attaches a note to the timer.
+            takes_value: true
         - project:
             long: project
             help: Attaches a project to the timer.

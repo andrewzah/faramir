@@ -61,12 +61,7 @@ fn main() -> AppResult<()> {
         ("ls", Some(sub_matches)) => timer_ls(&conn, sub_matches),
         ("rename", Some(sub_matches)) => rename(&conn, sub_matches),
         ("rm", Some(sub_matches)) => rm(&mut conn, sub_matches),
-        ("start", Some(sub_matches)) => {
-            let project = sub_matches.value_of("project").unwrap().into();
-            let tag_str = sub_matches.value_of("tags");
-
-            timer_start(&mut conn, project, tag_str)
-        },
+        ("start", Some(sub_matches)) => timer_start(&mut conn, sub_matches),
         ("status", Some(sub_matches)) => {
             timer_status(&conn, &config, sub_matches)
         },
@@ -104,6 +99,10 @@ fn timer_add(
     let tz: Tz = config.timezone.parse()?;
     let project = sub_matches.value_of("project").unwrap();
     let tags = sub_matches.value_of("tags");
+    let note = match sub_matches.value_of("note") {
+        Some(note_str) => Some(note_str.into()),
+        None => None,
+    };
 
     if let Some(start_str) = sub_matches.value_of("start") {
         let end_str = match sub_matches.value_of("end") {
@@ -123,7 +122,7 @@ fn timer_add(
         let end_dt = tz.datetime_from_str(&end_str, &config.time_format)?;
         let end_utc = end_dt.with_timezone(&Utc);
 
-        let mut create_timer = CreateTimer::new(start_utc, Some(end_utc));
+        let mut create_timer = CreateTimer::new(start_utc, Some(end_utc), note);
 
         if sub_matches.is_present("confirm") {
             let file_name =
@@ -179,10 +178,17 @@ fn timer_status(
     Ok(())
 }
 
-fn timer_start(
-    conn: &mut Connection, project: &str, tag_str: Option<&str>,
-) -> AppResult<()> {
-    let create_timer = CreateTimer::default();
+fn timer_start( conn: &mut Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+    let project = sub_matches.value_of("project").unwrap().into();
+    let tag_str = sub_matches.value_of("tags");
+    let note = match sub_matches.value_of("note") {
+        Some(note_str) => Some(note_str.into()),
+        None => None,
+    };
+
+    let mut create_timer = CreateTimer::default();
+    create_timer.note = note;
+
     db::handle_inserts(conn, project, tag_str, &create_timer)?;
     println!(
         "Successfully started timer {} for project {}.",

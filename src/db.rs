@@ -34,7 +34,8 @@ pub fn init_db(conn: &Connection) -> AppResult<usize> {
             id INTEGER PRIMARY KEY,
             rid TEXT NOT NULL,
             start TEXT NOT NULL,
-            end TEXT
+            end TEXT,
+            note TEXT
         );",
         params![],
     )?;
