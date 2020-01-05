@@ -1,10 +1,11 @@
-* fix/refactor timer logic to not have `config` get thrown around everywhere
+* stop --at <manual time>
+* rename history->log
+* history --from --to
 
-* add command
-* stop command
-* replace logic in start command to check for duplicate projects
+* cancel command (remove last created currently running timer)
+* config command
+* edit command (for timers)
 
-* tags support
+* export command (csv, json)
 
-log:
-Jan 01, 11pm: work on faramir for 5 hours
+** command line completion??

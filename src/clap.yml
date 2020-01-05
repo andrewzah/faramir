@@ -1,4 +1,4 @@
-name: Faramir
+name: faramir
 version: "0.1"
 author: Andrew Zah <zah@andrewzah.com>
 about: Minimal time tracking cli utility
@@ -65,8 +65,8 @@ subcommands:
             short: d
             long: detailed
             help: List detailed start time.
-  - history:
-      about: Gets the last 10 timers.
+  - log:
+      about: Get the last 10 timers.
       args:
         - limit:
             short: l
@@ -85,6 +85,14 @@ subcommands:
             takes_value: true
             index: 1
             required: true
+  - completions:
+      about: Generate auto completions for your shell.
+      args:
+        - shell:
+            takes_value: true
+            index: 1
+            required: true
+            possible_values: [ bash, fish, zsh, powershell, elvish ]
   - rename:
       about: Rename a tag or project.
       args:

@@ -3,10 +3,10 @@
 #![allow(unused_variables)]
 
 use std::{io, path::{Path, PathBuf}, fs, fs::File, env};
-use std::io::Write;
+use std::io::{BufWriter, Write};
 
 use chrono::{DateTime, Utc};
-use clap::{Arg, ArgMatches, App, load_yaml};
+use clap::{Arg, ArgMatches, App, Shell, load_yaml};
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use rusqlite::{params, Connection};
 
@@ -51,7 +51,8 @@ fn parse_tags(tags: Option<&str>) -> Option<Vec<String>> {
 
 fn main() -> AppResult<()> {
     let yaml = load_yaml!("clap.yml");
-    let matches = App::from_yaml(yaml).get_matches();
+    let mut app = App::from_yaml(yaml);
+    let matches = app.clone().get_matches();
 
     let config_path = match matches.value_of("config") {
         Some(path) => PathBuf::from(path),
@@ -78,11 +79,14 @@ fn main() -> AppResult<()> {
         ("ls", Some(sub_matches)) => {
             timer_ls(&conn, sub_matches)
         },
-        ("history", Some(sub_matches)) => {
-            timer_history(&conn, sub_matches)
+        ("log", Some(sub_matches)) => {
+            log(&conn, sub_matches)
         },
         ("rename", Some(sub_matches)) => {
-            timer_rename(&conn, sub_matches)
+            rename(&conn, sub_matches)
+        },
+        ("completions", Some(sub_matches)) => {
+            completions(&conn, &mut app, &config, sub_matches)
         },
         ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
         _ => Err(AppError::from_str("A subcommand must be provided."))
@@ -258,7 +262,7 @@ fn rename_tag(conn: &Connection, old_name: &str, new_name: &str) -> AppResult<()
     Ok(())
 }
 
-fn timer_rename(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+fn rename(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
     let old_name = sub_matches.value_of("old-name").unwrap();
     let new_name = sub_matches.value_of("new-name").unwrap();
     match sub_matches.value_of("type").unwrap() {
@@ -272,7 +276,7 @@ fn timer_rename(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
 }
 
 
-fn timer_history(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+fn log(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
     let limit = match sub_matches.value_of("limit") {
         Some(l) => l,
         None => "10"
@@ -284,6 +288,31 @@ fn timer_history(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
     for timer in timers.0 {
         println!("{} - start: {}, end: {}", timer.rid, timer.start, timer.end.unwrap());
     }
+
+    Ok(())
+}
+
+fn completions(conn: &Connection, app: &mut App, config: &Config, sub_matches: &ArgMatches) -> AppResult<()> {
+    let shell_name = sub_matches.value_of("shell").unwrap();
+    let path = &config.data_dir.join(format!("faramir.{}-completion", &shell_name));
+
+    let shell = match shell_name {
+        "bash" => Shell::Bash,
+        "fish" => Shell::Fish,
+        "zsh" => Shell::Zsh,
+        "powershell" => Shell::PowerShell,
+        "elvish" => Shell::Elvish,
+        _ => return Err(AppError::from_str("Unsupported shell."))
+    };
+
+    let f = File::create(path)?;
+    let mut f = BufWriter::new(f);
+
+    app.gen_completions_to(
+        "faramir",
+        shell,
+        &mut f
+    );
 
     Ok(())
 }
