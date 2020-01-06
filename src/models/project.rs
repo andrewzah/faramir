@@ -7,7 +7,7 @@ use crate::{
     models::timer::Timers,
 };
 
-pub struct Projects(Vec<Project>);
+pub struct Projects(pub Vec<Project>);
 
 impl Projects {
     pub fn len(&self) -> usize {

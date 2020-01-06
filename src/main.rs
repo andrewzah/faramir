@@ -62,6 +62,7 @@ fn main() -> AppResult<()> {
         ("rename", Some(sub_matches)) => rename(&conn, sub_matches),
         ("rm", Some(sub_matches)) => rm(&mut conn, sub_matches),
         ("start", Some(sub_matches)) => timer_start(&mut conn, sub_matches),
+        ("stats", Some(sub_matches)) => stats(&conn, sub_matches),
         ("status", Some(sub_matches)) => {
             timer_status(&conn, &config, sub_matches)
         },
@@ -69,6 +70,21 @@ fn main() -> AppResult<()> {
         ("", None) => Err(AppError::from_str("A subcommand must be provided.")),
         _ => Err(AppError::from_str("A subcommand must be provided.")),
     }
+}
+
+fn stats(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
+    let projects = Projects::all(&conn)?;
+
+    for project in projects.0 {
+        let timers = Timers::for_project(&conn, project.id)?;
+        println!("Project {} - {} timer(s) found.", project.name, timers.len());
+        let total_seconds = timers.total_seconds();
+
+        println!("total seconds: {}", total_seconds);
+        println!("foramtted: {}", utils::format_seconds(total_seconds));
+    }
+
+    Ok(())
 }
 
 fn rm(conn: &mut Connection, sub_matches: &ArgMatches) -> AppResult<()> {

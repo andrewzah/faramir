@@ -151,6 +151,8 @@ subcommands:
             short: d
             long: detailed
             help: List detailed start time.
+  - stats:
+      about: Get stats about projects and tags.
   - stop:
       about: Stop a timer or the only running timer.
       args:
