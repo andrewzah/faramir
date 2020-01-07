@@ -77,7 +77,11 @@ fn stats(conn: &Connection, sub_matches: &ArgMatches) -> AppResult<()> {
 
     for project in projects.0 {
         let timers = Timers::for_project(&conn, project.id)?;
-        println!("Project {} - {} timer(s) found.", project.name, timers.len());
+        println!(
+            "Project {} - {} timer(s) found.",
+            project.name,
+            timers.len()
+        );
         let total_seconds = timers.total_seconds();
 
         println!("total seconds: {}", total_seconds);

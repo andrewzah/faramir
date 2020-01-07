@@ -1,4 +1,4 @@
-use chrono::{Duration, DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use rusqlite::{params, Connection, NO_PARAMS};
 use serde::{Deserialize, Serialize};
 
@@ -13,9 +13,9 @@ use crate::{
 pub struct Timers(pub Vec<Timer>);
 impl Timers {
     pub fn total_seconds(&self) -> i64 {
-        self.0.iter().fold(0, |acc, t| {
-            acc + t.duration().num_seconds()
-        })
+        self.0
+            .iter()
+            .fold(0, |acc, t| acc + t.duration().num_seconds())
     }
 
     pub fn len(&self) -> usize {
